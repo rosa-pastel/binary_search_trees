@@ -83,6 +83,7 @@ class Tree
 
     include Cleanable
     include Traversal
+    attr_accessor :array
 
     def initialize(array)
         @array = clean_duplicates(array.sort)
@@ -106,7 +107,7 @@ class Tree
             Node.new(array[mid], set_left_child(array, first, mid-1), set_right_child(array, mid+1, last))
         end
     end
-    
+
     def build_tree(array)
         first = 0
         last = array.length - 1
@@ -171,12 +172,25 @@ class Tree
         node = find(data)
         parent = parent_of(data)
         return nil if node.nil? || node == @root
+        @array.delete(data)
         if node.left_child.nil? && node.right_child.nil?
-            parent.left_child.data == data ? parent.left_child = nil : parent.right_child = nil
-        elsif node.left_child.nil?
-            parent.left_child.data == data ? parent.left_child = node.right_child : parent.right_child = node.right_child
+            if !parent.left_child.nil? && parent.left_child.data == data
+                parent.left_child = nil
+            else 
+                parent.right_child = nil
+            end
+        elsif node.left_child.nil?            
+            if !parent.left_child.nil? && parent.left_child.data == data
+                parent.left_child = node.right_child
+            else 
+                parent.right_child = node.right_child
+            end
         elsif node.right_child.nil?
-            parent.left_child.data == data ? parent.left_child = node.left_child : parent.right_child = node.left_child
+            if !parent.left_child.nil? && parent.left_child.data == data
+                parent.left_child = node.left_child
+            else
+                parent.right_child = node.left_child
+            end
         else
             inorder_successor = inorder_successor_of(data)
             delete(inorder_successor.data)
@@ -209,6 +223,42 @@ class Tree
         nil
     end
 
+    def height(data)
+        height = 0
+        self.array.each do |leaf|
+            leaf = find(leaf)
+            break if leaf.nil?
+            if leaf.left_child.nil? && leaf.right_child.nil?
+                distance = 1
+                until parent_of(leaf.data).data == data || parent_of(leaf.data) == @root do
+                    leaf = parent_of(leaf.data)
+                    distance += 1
+                end
+                if parent_of(leaf.data).data == data && distance > height
+                    height = distance
+                end
+            end
+        end
+        height
+    end
+
+    def depth(data)
+        distance = 0
+        until @root.data == data do
+            distance += 1
+            data = parent_of(data).data
+        end
+        return distance
+    end
+
+    def balanced?()
+        (self.height(@root.left_child.data) - self.height(@root.right_child.data)).abs > 1 ? false : true
+    end
+
+    def rebalance()
+        Tree.new(self.array)
+    end
+
 end
 
 my_tree = Tree.new([17,44,28,29,88,97,65,54,82,76,80,78])
@@ -218,3 +268,11 @@ end
 p my_tree.inorder()
 p my_tree.preorder()
 p my_tree.postorder()
+p my_tree.height(28)
+p my_tree.depth(28)
+p my_tree.balanced?()
+my_tree.delete(17).delete(28).delete(54).delete(44)
+p my_tree.balanced?()
+my_tree = my_tree.rebalance()
+p my_tree.balanced?()
+

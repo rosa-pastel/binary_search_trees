@@ -15,34 +15,78 @@ module Cleanable
     end
 end
 
+module Traversal
+
+    def level_order()
+        level_order_array = level_order_traversal(@root.data)
+        block_given? ? yield(level_order_array) : level_order_array
+    end
+
+    def level_order_traversal(parent, queue=[parent] , array = [])
+        if queue.empty?
+            return array
+        else
+            parent = queue[0]
+            array.push(parent)
+            queue.push(find(parent).left_child.data) unless find(parent).left_child.nil?
+            queue.push(find(parent).right_child.data) unless find(parent).right_child.nil?
+            queue.shift()
+            return level_order_traversal(parent, queue, array)
+        end
+    end
+
+    def inorder(current = @root, array = [])
+        if current.left_child.nil? || array.include?(current.left_child.data)
+            array.push(current.data)
+            array = inorder(current.right_child, array) unless current.right_child.nil?
+        else
+            array = inorder(current, inorder(current.left_child, array))
+        end
+        return array
+    end
+
+    def preorder(current = @root, array = [])
+        array.push(current.data) unless array.include?(current.data)
+        if current.left_child.nil? || array.include?(current.left_child.data)
+            array = preorder(current.right_child, array) unless current.right_child.nil?
+        else
+            array = preorder(current, preorder(current.left_child, array))
+        end
+        return array
+    end
+
+    def postorder(current = @root, array = [])
+        if current.left_child.nil? || array.include?(current.left_child.data)
+            array = postorder(current.right_child, array) unless current.right_child.nil?
+            array.push(current.data) unless array.include?(current.data)
+        else
+            array = postorder(current, postorder(current.left_child, array))
+        end
+        return array
+    end
+
+end
+
 class Node
     include Comparable
+    include Traversal
     attr_accessor :data, :left_child, :right_child
     def initialize (data, left_child = nil, right_child = nil)
         @data = data
         @left_child = left_child
         @right_child = right_child
     end
+
 end
 
 class Tree
 
     include Cleanable
+    include Traversal
 
     def initialize(array)
         @array = clean_duplicates(array.sort)
         @root = build_tree(@array)
-    end
-
-    def build_tree(array)
-        first = 0
-        last = array.length - 1
-        mid = ((first + last) / 2).round()
-        if first > last
-            Node.new(array[mid])
-        else
-            Node.new(array[mid], set_left_child(array, first, mid-1), set_right_child(array, mid+1, last))
-        end
     end
 
     def set_left_child(array, first, last)
@@ -58,6 +102,17 @@ class Tree
         mid = ((first + last) / 2).round()
         if first > last
             nil
+        else
+            Node.new(array[mid], set_left_child(array, first, mid-1), set_right_child(array, mid+1, last))
+        end
+    end
+    
+    def build_tree(array)
+        first = 0
+        last = array.length - 1
+        mid = ((first + last) / 2).round()
+        if first > last
+            Node.new(array[mid])
         else
             Node.new(array[mid], set_left_child(array, first, mid-1), set_right_child(array, mid+1, last))
         end
@@ -103,28 +158,6 @@ class Tree
         nil
     end
 
-    def parent_of(data)
-        parent = @root
-        current_node = @root
-        not_found = false
-        until not_found
-            if current_node.data == data
-                return parent
-            elsif current_node.data < data && current_node.right_child.nil?
-                not_found = true
-            elsif current_node.data < data
-                parent = current_node
-                current_node = current_node.right_child
-            elsif current_node.data > data && current_node.left_child.nil?
-                not_found = true
-            elsif current_node.data > data
-                parent = current_node
-                current_node = current_node.left_child
-            end
-        end
-        nil
-    end
-
     def inorder_successor_of(data)
         node = find(data)
         current = node.right_child
@@ -154,38 +187,34 @@ class Tree
         self
     end
 
-    def level_order(&level_order)
-        level_order_array = level_order_traversal([@root])
-        if block_given?
-            level_order_array.each do
-                yield node
+    def parent_of(data)
+        parent = @root
+        current_node = @root
+        not_found = false
+        until not_found
+            if current_node.data == data
+                return parent
+            elsif current_node.data < data && current_node.right_child.nil?
+                not_found = true
+            elsif current_node.data < data
+                parent = current_node
+                current_node = current_node.right_child
+            elsif current_node.data > data && current_node.left_child.nil?
+                not_found = true
+            elsif current_node.data > data
+                parent = current_node
+                current_node = current_node.left_child
             end
-        else
-            return level_order
         end
+        nil
     end
 
-    level_order(node) { node.data }
-
-    def level_order_traversal(parents)
-        array = []
-        queue = []
-        until parents.length < 1 do
-            parents.each_with_index do |parent, index|
-                array.push(parent)
-                unless parent.left_child.nil?
-                    queue.push(parent.left_child) 
-                end
-                unless parent.right_child.nil? 
-                    queue.push(parent.right_child)
-                end
-                parents.delete_at(index)
-            end
-                parents += queue
-                queue = []
-        end
-        return array
-    end
-    
 end
-p Tree.new([17,44,28,29,88,97,65,54,82,76,80,78]).level_order
+
+my_tree = Tree.new([17,44,28,29,88,97,65,54,82,76,80,78])
+my_tree.level_order.each do |data| 
+    puts data 
+end
+p my_tree.inorder()
+p my_tree.preorder()
+p my_tree.postorder()

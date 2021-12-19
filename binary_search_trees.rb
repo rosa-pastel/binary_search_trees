@@ -122,6 +122,7 @@ class Tree
     def insert(data)
         current_node = @root
         inserted = false
+        @array.push(data)
         until inserted do
             if current_node.data < data && current_node.right_child.nil?
                 current_node.right_child = Node.new(data)
@@ -261,18 +262,17 @@ class Tree
 
 end
 
-my_tree = Tree.new([17,44,28,29,88,97,65,54,82,76,80,78])
-my_tree.level_order.each do |data| 
-    puts data 
-end
-p my_tree.inorder()
-p my_tree.preorder()
-p my_tree.postorder()
-p my_tree.height(28)
-p my_tree.depth(28)
-p my_tree.balanced?()
-my_tree.delete(17).delete(28).delete(54).delete(44)
-p my_tree.balanced?()
-my_tree = my_tree.rebalance()
-p my_tree.balanced?()
+puts "Testing the methods"
+odin_tree = Tree.new(Array.new(15) { rand(1..100)})
+p odin_tree.balanced?()
+p odin_tree.preorder()
+p odin_tree.inorder()
+p odin_tree.postorder()
+odin_tree.insert(101).insert(199).insert(148).insert(144).insert(177)
+p odin_tree.balanced?()
+odin_tree = odin_tree.rebalance()
+p odin_tree.balanced?()
+p odin_tree.preorder()
+p odin_tree.inorder()
+p odin_tree.postorder()
 

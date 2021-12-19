@@ -260,17 +260,27 @@ class Tree
         Tree.new(self.array)
     end
 
+    def pretty_print(node = @root, prefix = '', is_left = true)
+        pretty_print(node.right_child, "#{prefix}#{is_left ? '│   ' : '    '}", false) if node.right_child
+        puts "#{prefix}#{is_left ? '└── ' : '┌── '}#{node.data}"
+        pretty_print(node.left_child, "#{prefix}#{is_left ? '    ' : '│   '}", true) if node.left_child
+    end
+
 end
 
 puts "Testing the methods"
 odin_tree = Tree.new(Array.new(15) { rand(1..100)})
+puts "\n"
+odin_tree.pretty_print()
 p odin_tree.balanced?()
 p odin_tree.preorder()
 p odin_tree.inorder()
 p odin_tree.postorder()
 odin_tree.insert(101).insert(199).insert(148).insert(144).insert(177)
+odin_tree.pretty_print()
 p odin_tree.balanced?()
 odin_tree = odin_tree.rebalance()
+odin_tree.pretty_print()
 p odin_tree.balanced?()
 p odin_tree.preorder()
 p odin_tree.inorder()
